@@ -1,0 +1,1 @@
+scripts/services/start_rithmic.sh

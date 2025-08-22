@@ -1,0 +1,28 @@
+[project]
+name = "fks-data"
+version = "0.1.0"
+description = "FKS Data Service (data acquisition, validation, storage)"
+requires-python = ">=3.11"
+readme = "README.md"
+license = { text = "Proprietary" }
+
+# Minimal runtime deps (expand as needed explicitly)
+dependencies = [
+  "pydantic>=2",
+  "requests",
+  "numpy",
+  "pandas",
+  "pyyaml",
+]
+
+[project.optional-dependencies]
+redis = ["redis", "aioredis"]
+postgres = ["sqlalchemy", "asyncpg", "alembic"]
+validation = ["pandera", "fastapi"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["fks_data*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
