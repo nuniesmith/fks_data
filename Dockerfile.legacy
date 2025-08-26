@@ -1,0 +1,47 @@
+# syntax=docker/dockerfile:1.7
+# Multi-stage Dockerfile for fks_data
+
+ARG PYTHON_VERSION=3.11-slim
+FROM python:${PYTHON_VERSION} AS base
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    POETRY_VERSION=1.8.3
+
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential curl git && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN curl -sSL https://install.python-poetry.org | python - --version $POETRY_VERSION && \
+    ln -s /root/.local/bin/poetry /usr/local/bin/poetry
+
+WORKDIR /app
+
+# Only copy pyproject first for dependency layer caching
+COPY pyproject.toml ./
+COPY README.md ./
+
+# Configure poetry to not create virtualenvs (we're in container) and install runtime deps only
+RUN poetry config virtualenvs.create false
+
+# Install dependencies (no dev) initially; will be re-run after copying src if lock changes later
+RUN poetry install --no-interaction --no-ansi --only main
+
+# Copy application source
+COPY sitecustomize.py ./
+COPY src ./src
+
+# Reinstall including dev deps for test image stage (optional)
+FROM base AS dev
+RUN poetry install --no-interaction --no-ansi
+CMD ["python", "-m", "fks_data.main"]
+
+# Production runtime image (smaller)
+FROM python:${PYTHON_VERSION} AS prod
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+COPY --from=base /usr/local/lib/python*/ /usr/local/lib/python*/
+COPY --from=base /usr/local/bin/ /usr/local/bin/
+COPY --from=base /app /app
+EXPOSE 9001
+HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request,sys;\nimport os;\nurl=f'http://localhost:{os.getenv('DATA_SERVICE_PORT','9001')}/health';\nprint('checking',url);\nurllib.request.urlopen(url).read()[:10] or sys.exit(1)" || exit 1
+ENTRYPOINT ["python", "-m", "fks_data.main"]

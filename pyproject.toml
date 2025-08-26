@@ -1,28 +1,40 @@
-[project]
-name = "fks-data"
+## Converted to Poetry for consistency with other Python services
+[tool.poetry]
+name = "fks_data"
 version = "0.1.0"
 description = "FKS Data Service (data acquisition, validation, storage)"
-requires-python = ">=3.11"
+license = "Proprietary"
 readme = "README.md"
-license = { text = "Proprietary" }
-
-# Minimal runtime deps (expand as needed explicitly)
-dependencies = [
-  "pydantic>=2",
-  "requests",
-  "numpy",
-  "pandas",
-  "pyyaml",
+authors = ["FKS <nunie.smith01@gmail.com>"]
+packages = [
+  { include = "fks_data", from = "src" }
 ]
 
-[project.optional-dependencies]
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+pydantic = "^2.0"
+requests = "*"
+numpy = "*"
+pandas = "*"
+pyyaml = "*"
+fks_shared_python = { path = "../../shared/shared_python", develop = true }
+jsonschema = "^4.21.1"
+
+# Optional provider / infra extras
+[tool.poetry.extras]
 redis = ["redis", "aioredis"]
 postgres = ["sqlalchemy", "asyncpg", "alembic"]
 validation = ["pandera", "fastapi"]
+ml = ["torch"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["fks_data*"]
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+pytest-asyncio = "^0.23"
+httpx = "^0.27"
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
+[tool.poetry.scripts]
+fks_data = "fks_data.main:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

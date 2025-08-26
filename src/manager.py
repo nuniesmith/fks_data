@@ -1320,6 +1320,34 @@ class DataManager:
             "irregularities": 0.0,
         }
 
+        # Lazy import holder for adapter factory (Week 2 integration)
+        self._adapter_factory = None
+
+    # ---------------- Adapter Layer Integration -----------------
+    def fetch_market_data(self, provider: str, **kwargs) -> Dict[str, Any]:
+        """Fetch normalized market data via unified adapter layer.
+
+        Args:
+            provider: Adapter name (e.g. 'binance', 'polygon').
+            **kwargs: Provider-specific request params.
+
+        Returns:
+            Canonical dict: { provider: str, data: list[dict], request: dict }
+
+        Notes:
+            - Wraps import in-method to avoid hard dependency if older
+              workflows use DataManager without adapters.
+            - Raises ValueError if adapter unknown (mirrors factory behavior).
+        """
+        if self._adapter_factory is None:
+            try:  # defer import so legacy usages of DataManager remain unaffected if path differs
+                from fks_data.adapters import get_adapter  # type: ignore
+                self._adapter_factory = get_adapter
+            except Exception as e:  # pragma: no cover
+                raise RuntimeError(f"Adapter layer unavailable: {e}")
+        adapter = self._adapter_factory(provider)
+        return adapter.fetch(**kwargs)
+
     def get_asset_manager(self, asset_symbol: str) -> AssetDataManager:
         """
         Get or create an asset manager for the specified symbol.
