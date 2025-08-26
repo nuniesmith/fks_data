@@ -1,0 +1,20 @@
+services:
+  fks_data:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - data_volume:/var/lib/fks/data
+    networks: [fks_net]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import sqlite3,os; sqlite3.connect(\"/var/lib/fks/data/active_assets.db\").close(); print(1)' || exit 1"]
+      interval: 60s
+      timeout: 8s
+      retries: 2
+      start_period: 25s
+
+networks:
+  fks_net:
+    name: fks_net
+volumes:
+  data_volume:

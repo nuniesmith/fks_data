@@ -38,7 +38,7 @@ def test_retry_exhaust(monkeypatch):
         raise RuntimeError("down")
 
     adapter = get_adapter("binance", http=always_fail)
-    from shared_python.exceptions import DataFetchError  # type: ignore
+    from fks_shared_python.exceptions import DataFetchError  # type: ignore
 
     try:
         adapter.fetch(symbol="BTCUSDT", interval="1m", limit=1)
