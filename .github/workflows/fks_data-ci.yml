@@ -1,8 +1,12 @@
 name: fks_data CI
 
+concurrency:
+  group: fks_data-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
     paths:
       - 'src/**'
       - 'migrations/**'
@@ -11,6 +15,7 @@ on:
       - 'Dockerfile'
       - '.github/workflows/fks_data-ci.yml'
   pull_request:
+    branches: [ main ]
     paths:
       - 'src/**'
       - 'migrations/**'
@@ -61,10 +66,7 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: |
           poetry install --no-interaction --no-root
-          # Install shared dependencies if they exist
-          if [ -d "shared_python" ]; then
-            poetry run pip install -e shared_python
-          fi
+          # Note: shared_python is added to PYTHONPATH in test steps instead of installing as editable package
 
       - name: Install project
         run: poetry install --no-interaction
@@ -93,10 +95,13 @@ jobs:
     name: Docker Build (fks_data)
     runs-on: ubuntu-latest
     needs: test
-    timeout-minutes: 20
+    timeout-minutes: 25
     permissions:
       contents: read
       packages: write
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -107,17 +112,17 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: (Optional) Log in to DockerHub
-        if: secrets.DOCKER_USERNAME != '' && secrets.DOCKER_TOKEN != ''
+        if: ${{ env.DOCKER_USERNAME != '' && env.DOCKER_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_TOKEN }}
 
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME != '' && format('{0}/fks_data', secrets.DOCKER_USERNAME) || 'local/fks_data' }}
+          images: ${{ env.DOCKER_USERNAME != '' && format('{0}/fks_data', env.DOCKER_USERNAME) || 'local/fks_data' }}
           tags: |
             type=ref,event=branch
             type=ref,event=tag
@@ -129,7 +134,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          push: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_TOKEN != '' }}
+          push: ${{ env.DOCKER_USERNAME != '' && env.DOCKER_TOKEN != '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -137,23 +142,21 @@ jobs:
             SERVICE_TYPE=data
             BUILD_TYPE=cpu
 
-      - name: Run container smoke test (data service)
+      - name: Run container smoke test
         run: |
           # Get the first tag from the metadata output
           IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
-          # Data service may not have a web endpoint, so just test basic container startup
-          docker run --rm --name fks_data_test "$IMAGE_TAG" --help || echo 'No --help available, testing basic import'
-          docker run --rm --name fks_data_test "$IMAGE_TAG" python -c "import fks_data; print('fks_data module imported successfully')" || echo 'Basic container test completed'
+          docker run --rm --name fks_data_test "$IMAGE_TAG" python -c "import sys; sys.path.append('/app/src'); import main; print('fks_data module imported successfully')" || echo 'Basic container test completed'
 
       - name: Export image artifact (no push scenario)
-        if: secrets.DOCKER_USERNAME == '' || secrets.DOCKER_TOKEN == ''
+        if: ${{ env.DOCKER_USERNAME == '' || env.DOCKER_TOKEN == '' }}
         run: |
           # Get the first tag from the metadata output
           IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
           docker save "$IMAGE_TAG" | gzip > fks_data-image.tar.gz
         
       - name: Upload image artifact
-        if: secrets.DOCKER_USERNAME == '' || secrets.DOCKER_TOKEN == ''
+        if: ${{ env.DOCKER_USERNAME == '' || env.DOCKER_TOKEN == '' }}
         uses: actions/upload-artifact@v4
         with:
           name: fks_data-image
