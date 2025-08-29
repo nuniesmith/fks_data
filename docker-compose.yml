@@ -2,8 +2,20 @@ services:
   fks_data:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: shared/shared_docker/templates/python.Dockerfile
+    working_dir: /app/src
+    command: ["python", "-m", "fks_data.main"]
+    environment:
+      TZ: America/Toronto
+      SERVICE_PORT: 4200
+      PYTHONPATH: /app/src
+    ports:
+      - "4200:4200"
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
       - data_volume:/var/lib/fks/data
     networks: [fks_net]
     healthcheck:
