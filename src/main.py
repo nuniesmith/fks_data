@@ -509,12 +509,12 @@ def start_template_service(service_name: str | None = None, service_port: int | 
 
 
 def main():
-    # Set the service name and port from environment variables or defaults
+    # Prefer the standardized monitoring port 8002 unless explicitly overridden
     service_name = os.getenv("DATA_SERVICE_NAME", "data")
-    port = os.getenv("DATA_SERVICE_PORT", "9001")
+    port = os.getenv("DATA_SERVICE_PORT", os.getenv("SERVICE_PORT", "8002"))
 
     # Log the service startup
-    print(f"Starting {service_name} service on port {port}")
+    print(f"[fks_data] Starting {service_name} service on port {port}")
 
     # Start the service using the template
     start_template_service(service_name=service_name, service_port=int(port))

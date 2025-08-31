@@ -13,8 +13,9 @@ COPY --from=build /app/src/ /app/src/
 
 # Set service-specific environment variables
 ENV SERVICE_NAME=fks-data \
-    SERVICE_TYPE=data \
-    SERVICE_PORT=8002
+  SERVICE_TYPE=data \
+  SERVICE_PORT=8002 \
+  DATA_SERVICE_PORT=8002
 
 # Health check endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
@@ -24,5 +25,5 @@ EXPOSE ${SERVICE_PORT}
 
 USER appuser
 
-# Use FastAPI/uvicorn as default entrypoint for data service
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002"]
+# Run the Python entrypoint directly (framework builds its own Flask app)
+CMD ["python", "src/main.py"]
