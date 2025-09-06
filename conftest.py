@@ -2,7 +2,7 @@
 
 Ensures the local `src` directory is importable as a package root so that
 `import fks_data` style imports succeed without an editable install.
-Also places the shared `shared/shared_python/src` on sys.path (for canonical
+Also places the shared `shared/python/src` on sys.path (for canonical
 `fks_shared_python`) when present.
 """
 from __future__ import annotations

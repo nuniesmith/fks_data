@@ -20,7 +20,7 @@ def main() -> int:
             Trade,
         )
     except Exception:
-        # Attempt to add relative path: ../../shared/shared_python
+        # Attempt to add relative path: ../../shared/python
         root = Path(__file__).resolve().parents[2]  # .../repos/fks
         candidate = root.parent / "shared" / "shared_python"
         if (candidate / "pyproject.toml").exists():
@@ -38,7 +38,7 @@ def main() -> int:
                 print(f"IMPORT_FAIL: {e}")
                 return 2
         else:
-            print("IMPORT_FAIL: shared_python path not found; install with pip -e ../shared/shared_python")
+            print("IMPORT_FAIL: shared_python path not found; install with pip -e ../shared/python")
             return 2
 
     # Settings load

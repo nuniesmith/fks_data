@@ -4,7 +4,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_ROOT="$(cd "$HERE/.." && pwd)"
 REPO_ROOT="$(cd "$SERVICE_ROOT/.." && pwd)"  # .../repos/fks
-SHARED_DIR="$REPO_ROOT/../shared/shared_python"
+SHARED_DIR="$REPO_ROOT/../shared/python"
 
 if [ ! -f "$SHARED_DIR/pyproject.toml" ]; then
   echo "shared_python not found at: $SHARED_DIR" >&2

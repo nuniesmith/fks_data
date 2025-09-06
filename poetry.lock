@@ -178,7 +178,7 @@ dev = ["mypy", "pytest", "pytest-cov", "ruff"]
 
 [package.source]
 type = "directory"
-url = "../../shared/shared_python"
+url = "../../shared/python"
 
 [[package]]
 name = "h11"
