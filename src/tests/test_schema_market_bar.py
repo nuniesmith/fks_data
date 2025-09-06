@@ -13,8 +13,11 @@ from fks_data.adapters import get_adapter  # type: ignore
 
 def test_market_bar_schema_validation(monkeypatch):
     # Load schema
-    schema_path = Path(__file__).resolve().parents[3] / "shared" / "shared_schema" / "market_bar.schema.json"
-    with open(schema_path) as f:
+    root = Path(__file__).resolve().parents[3]
+    primary = root / "shared" / "shared_schema" / "market_bar.schema.json"
+    fallback = root / "fks_data" / "shared" / "shared_schema" / "market_bar.schema.json"
+    path = primary if primary.exists() else fallback
+    with open(path) as f:
         schema = json.load(f)
 
     # Stub HTTP returning one kline row
