@@ -34,10 +34,24 @@ services:
       retries: 2
       start_period: 25s
 
+  data_redis:
+    image: redis:7-alpine
+    networks: [fks_net]
+    volumes:
+      - data_redis_volume:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 60s
+      timeout: 5s
+      retries: 2
+      start_period: 20s
+
+volumes:
+  data_volume:
+  data_redis_volume:
+
+
 networks:
   fks_net:
     name: fks_net
     external: true
-
-volumes:
-  data_volume:

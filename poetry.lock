@@ -160,7 +160,7 @@ files = [
 ]
 
 [[package]]
-name = "fks_shared_python"
+name = "shared_python"
 version = "0.1.0"
 description = "FKS shared Python utilities: config/env loading, logging helpers, risk utils, shared types"
 optional = false

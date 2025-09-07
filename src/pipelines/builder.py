@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from framework.base.component import Component
 from loguru import logger
-from services.data.pipelines.executor import PipelineExecutor
+from Zservices.data.pipelines.executor import PipelineExecutor
 
 logger = logger.opt(colors=True)
 

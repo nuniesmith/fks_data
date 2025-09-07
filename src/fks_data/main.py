@@ -107,19 +107,19 @@ def _custom_endpoints():  # noqa: C901
 
     # Provider modules (optional)
     try:
-        from services.data.providers import rithmic as _prov_rithmic  # type: ignore
+        from Zservices.data.providers import rithmic as _prov_rithmic  # type: ignore
     except Exception:  # pragma: no cover
         _prov_rithmic = None  # type: ignore
     try:
-        from services.data.providers import alpha as _prov_alpha  # type: ignore
+        from Zservices.data.providers import alpha as _prov_alpha  # type: ignore
     except Exception:  # pragma: no cover
         _prov_alpha = None  # type: ignore
     try:
-        from services.data.providers import polygon as _prov_polygon  # type: ignore
+        from Zservices.data.providers import polygon as _prov_polygon  # type: ignore
     except Exception:  # pragma: no cover
         _prov_polygon = None  # type: ignore
     try:
-        from services.data.providers import binance as _prov_binance  # type: ignore
+        from Zservices.data.providers import binance as _prov_binance  # type: ignore
     except Exception:  # pragma: no cover
         _prov_binance = None  # type: ignore
 

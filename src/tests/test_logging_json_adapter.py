@@ -15,7 +15,7 @@ def test_adapter_emits_json_logs(monkeypatch):
     handler = logging.StreamHandler(stream)
     # Force re-init logging (prefer canonical)
     try:
-        from fks_shared_python import logging as shared_logging  # type: ignore
+        from shared_python import logging as shared_logging  # type: ignore
     except Exception:  # pragma: no cover
         from shared_python import logging as shared_logging  # type: ignore
     shared_logging._LOGGER_INITIALIZED = False  # type: ignore
@@ -23,7 +23,7 @@ def test_adapter_emits_json_logs(monkeypatch):
     root = logging.getLogger()
     # Ensure JSON formatter applied
     try:
-        from fks_shared_python.logging import _JsonFormatter  # type: ignore
+        from shared_python.logging import _JsonFormatter  # type: ignore
     except Exception:  # pragma: no cover
         from shared_python.logging import _JsonFormatter  # type: ignore
     handler.setFormatter(_JsonFormatter())

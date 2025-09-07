@@ -17,13 +17,13 @@ import time
 import random
 
 try:  # shared package (symlinked) imports
-    from fks_shared_python.config import get_settings  # type: ignore
-    from fks_shared_python.logging import get_logger  # type: ignore
-    from fks_shared_python.exceptions import DataFetchError  # type: ignore
+    from shared_python.config import get_settings  # type: ignore
+    from shared_python.logging import get_logger  # type: ignore
+    from shared_python.exceptions import DataFetchError  # type: ignore
 except Exception:  # pragma: no cover - fallback if path not yet wired
-    from fks_shared_python import get_settings  # type: ignore
-    from fks_shared_python.logging import get_logger  # type: ignore
-    from fks_shared_python.exceptions import DataFetchError  # type: ignore
+    from shared_python import get_settings  # type: ignore
+    from shared_python.logging import get_logger  # type: ignore
+    from shared_python.exceptions import DataFetchError  # type: ignore
 
 
 class HTTPClient(Protocol):

@@ -11,6 +11,6 @@ if [ ! -f "$SHARED_DIR/pyproject.toml" ]; then
   exit 1
 fi
 
-echo "+ Installing editable fks_shared_python from $SHARED_DIR"
+echo "+ Installing editable shared_python from $SHARED_DIR"
 pip install -e "$SHARED_DIR"
 echo "Done. Run: python scripts/test_shared_integration.py"

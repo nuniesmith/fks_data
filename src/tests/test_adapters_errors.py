@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 from fks_data.adapters import get_adapter
-from fks_shared_python.exceptions import DataFetchError  # type: ignore
+from shared_python.exceptions import DataFetchError  # type: ignore
 
 
 def test_adapter_raises_datafetcherror_on_http_failure():

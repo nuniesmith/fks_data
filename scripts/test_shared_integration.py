@@ -1,4 +1,4 @@
-"""Quick integration smoke test for fks_shared_python within fks_data service.
+"""Quick integration smoke test for shared_python within fks_data service.
 
 Run with: `python scripts/test_shared_integration.py`
 Fails (non-zero exit) if a core shared primitive is unusable.
@@ -11,7 +11,7 @@ from pathlib import Path
 
 def main() -> int:
     try:  # first attempt (installed package)
-        from fks_shared_python import (  # type: ignore
+        from shared_python import (  # type: ignore
             get_settings,
             RiskParams,
             composite_position,
@@ -26,7 +26,7 @@ def main() -> int:
         if (candidate / "pyproject.toml").exists():
             sys.path.insert(0, str(candidate / "src"))
             try:
-                from fks_shared_python import (  # type: ignore
+                from shared_python import (  # type: ignore
                     get_settings,
                     RiskParams,
                     composite_position,

@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 import os
 from .base import APIAdapter, get_env_any
-from fks_shared_python.exceptions import DataFetchError  # type: ignore
+from shared_python.exceptions import DataFetchError  # type: ignore
 
 
 class PolygonAdapter(APIAdapter):
