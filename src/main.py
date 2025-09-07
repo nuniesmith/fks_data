@@ -1,3 +1,10 @@
+from importlib import import_module as _imp
+
+# Backwards compatibility: original implementation lived at top-level src/main.py
+_orig = _imp("main")  # type: ignore
+
+main = getattr(_orig, "main")
+start_template_service = getattr(_orig, "start_template_service")
 """
 DATA Service Entry Point
 
@@ -509,12 +516,20 @@ def start_template_service(service_name: str | None = None, service_port: int | 
 
 
 def main():
-    # Prefer the standardized monitoring port 8002 unless explicitly overridden
+    # Set the service name and port from environment variables or defaults
     service_name = os.getenv("DATA_SERVICE_NAME", "data")
-    port = os.getenv("DATA_SERVICE_PORT", os.getenv("SERVICE_PORT", "8002"))
+    port = os.getenv("DATA_SERVICE_PORT", "9001")
+
+    # Run DB migrations unless disabled
+    if os.getenv("FKS_SKIP_MIGRATIONS", "0").lower() not in ("1", "true", "yes"):
+        try:
+            from scripts.run_migrations import run as run_migrations  # type: ignore
+            run_migrations()
+        except Exception as e:  # pragma: no cover
+            print(f"[fks_data.main] migration step skipped due to error: {e}")
 
     # Log the service startup
-    print(f"[fks_data] Starting {service_name} service on port {port}")
+    print(f"Starting {service_name} service on port {port}")
 
     # Start the service using the template
     start_template_service(service_name=service_name, service_port=int(port))
