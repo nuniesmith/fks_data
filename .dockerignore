@@ -1,4 +1,15 @@
-# ============================================================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info
+build/
+dist/
+*.pytest_cache/
+**/.mypy_cache/
+types.py
+logging.py
 # FKS Trading Systems - .dockerignore
 # ============================================================================
 # Prevents unnecessary files from being sent to Docker build context

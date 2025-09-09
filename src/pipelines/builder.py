@@ -3,10 +3,10 @@ Data pipeline builder for constructing data processing workflows
 """
 
 from typing import Any, Callable, Dict, List, Optional, Union
+from loguru import logger
 
 from framework.base.component import Component
-from loguru import logger
-from Zservices.data.pipelines.executor import PipelineExecutor
+from services.data.pipelines.executor import PipelineExecutor
 
 logger = logger.opt(colors=True)
 

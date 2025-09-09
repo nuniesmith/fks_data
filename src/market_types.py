@@ -10,6 +10,7 @@ class MarketBar(BaseModel):
     close: float
     volume: float = Field(ge=0)
     provider: Optional[str] = None
+
     @property
     def ohlc_tuple(self) -> tuple[float, float, float, float]:
         return (self.open, self.high, self.low, self.close)
