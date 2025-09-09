@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.manager import DataManager  # type: ignore  # noqa: E402
+from manager import DataManager  # type: ignore  # noqa: E402
 
 
 def test_manager_fetch_market_data_binance(monkeypatch):
@@ -23,7 +23,7 @@ def test_manager_fetch_market_data_binance(monkeypatch):
         return sample
 
     # Patch adapter factory to inject stub http
-    from fks_data.adapters import get_adapter
+    from adapters import get_adapter
 
     def factory(name: str, **kwargs):  # wrap to force stub http
         return get_adapter(name, http=stub_http)

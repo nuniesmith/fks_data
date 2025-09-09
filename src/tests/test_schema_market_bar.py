@@ -8,14 +8,14 @@ try:
 except ImportError:  # pragma: no cover
     pytest.skip("jsonschema not installed", allow_module_level=True)
 
-from fks_data.adapters import get_adapter  # type: ignore
+from adapters import get_adapter  # type: ignore
 
 
 def test_market_bar_schema_validation(monkeypatch):
     # Load schema
     root = Path(__file__).resolve().parents[3]
     primary = root / "shared" / "shared_schema" / "market_bar.schema.json"
-    fallback = root / "fks_data" / "shared" / "shared_schema" / "market_bar.schema.json"
+    fallback = root / "data" / "shared" / "shared_schema" / "market_bar.schema.json"
     path = primary if primary.exists() else fallback
     with open(path) as f:
         schema = json.load(f)

@@ -1,16 +1,4 @@
-from importlib import import_module as _imp
-
-# Backwards compatibility: original implementation lived at top-level src/main.py
-_orig = _imp("main")  # type: ignore
-
-main = getattr(_orig, "main")
-start_template_service = getattr(_orig, "start_template_service")
-"""
-DATA Service Entry Point
-
-This module serves as the entry point for the DATA service, integrating with the main application
-and utilizing the service template for service management.
-"""
+"""Data service entrypoint (flat layout)."""
 
 import os
 import sys

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MarketBar",
+  "type": "object",
+  "required": ["ts", "open", "high", "low", "close", "volume"],
+  "properties": {
+    "ts": {"type": "integer", "minimum": 0},
+    "open": {"type": "number"},
+    "high": {"type": "number"},
+    "low": {"type": "number"},
+    "close": {"type": "number"},
+    "volume": {"type": "number", "minimum": 0},
+    "provider": {"type": ["string", "null"]}
+  },
+  "additionalProperties": true
+}

@@ -5,7 +5,7 @@ import json
 from io import StringIO
 import logging
 
-from fks_data.adapters import get_adapter
+from adapters import get_adapter
 
 
 def test_adapter_emits_json_logs(monkeypatch):

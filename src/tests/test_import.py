@@ -1,6 +1,6 @@
 def test_import_main():
     import importlib
-    mod = importlib.import_module("fks_data.main")
+    mod = importlib.import_module("main")
     assert hasattr(mod, "main") or hasattr(mod, "run")
 
 # Lightweight smoke test for /health if service started separately

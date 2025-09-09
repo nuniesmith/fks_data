@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from fks_data.bars import BarRepository, MarketBar  # type: ignore
+from bars import BarRepository, MarketBar  # type: ignore
 
 
 def test_fetch_range_and_latest_with_stub(monkeypatch):

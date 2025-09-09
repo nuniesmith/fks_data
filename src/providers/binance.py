@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Callable
 
 try:
-    from fks_data.adapters import get_adapter  # type: ignore
+    from adapters import get_adapter  # type: ignore
 except Exception:  # pragma: no cover
     get_adapter = None  # type: ignore
 
@@ -34,7 +34,7 @@ def binance_klines(requester: Callable[[str, Dict[str, Any]], List[Any]] | None,
         return {"data": data}
 
     # Delegate to adapter (adapter returns 'data' with 'ts' key; preserve legacy 'time')
-    adapter = get_adapter("binance", http=(lambda url, params=None, headers=None, timeout=None: requester(url, params) if requester else []))
+    adapter = get_adapter("binance", http=(lambda url, params=None, headers=None, timeout=None: requester(url, params) if requester else []))  # type: ignore[arg-type]
     result = adapter.fetch(symbol=symbol, interval=interval, limit=limit, start_time=start_time, end_time=end_time)
     # Map ts -> time for backward compatibility
     legacy_rows = []

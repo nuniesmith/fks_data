@@ -19,7 +19,7 @@ except Exception:  # pragma: no cover
 from shared_python.types import MarketBar  # type: ignore
 
 try:  # reuse existing upsert logic for now
-    from src.store import upsert_ohlcv  # type: ignore
+    from store import upsert_ohlcv  # type: ignore
 except Exception:  # pragma: no cover
     upsert_ohlcv = None  # type: ignore
 

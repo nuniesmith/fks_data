@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Callable
 import warnings
 
 try:
-    from fks_data.adapters import get_adapter  # type: ignore
+    from adapters import get_adapter  # type: ignore
 except Exception:  # pragma: no cover
     get_adapter = None  # type: ignore
 
@@ -27,7 +27,7 @@ def polygon_aggs(requester: Callable[[str, Dict[str, Any]], Dict[str, Any]] | No
                 "volume": float(item.get("v", 0)),
             })
         return {"data": data}
-    adapter = get_adapter("polygon", http=(lambda url, params=None, headers=None, timeout=None: requester(url, params) if requester else {"results": []}))
+    adapter = get_adapter("polygon", http=(lambda url, params=None, headers=None, timeout=None: requester(url, params) if requester else {"results": []}))  # type: ignore[arg-type]
     result = adapter.fetch(ticker=ticker, range=rng, timespan=timespan, fro=fro, to=to)
     legacy_rows = []
     for row in result["data"]:

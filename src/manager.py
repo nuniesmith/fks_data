@@ -1,9 +1,22 @@
-"""Package wrapper re-exporting top-level manager module.
+"""DataManager facade (flat layout).
 
-Allows imports like ``fks_data.manager`` when the canonical implementation
-resides as a top-level module (manager.py) shipped for historical reasons.
+Provides a thin orchestration layer over adapter factory so tests can
+instantiate `DataManager` and call `fetch_market_data` similar to prior
+namespaced implementation.
 """
-from importlib import import_module as _imp
+from __future__ import annotations
 
-_mgr = _imp('manager')  # type: ignore
-globals().update({k: getattr(_mgr, k) for k in dir(_mgr) if not k.startswith('_')})
+from typing import Any, Dict
+
+from adapters import get_adapter  # type: ignore
+
+
+class DataManager:
+	def __init__(self):
+		self._adapter_factory = get_adapter
+
+	def fetch_market_data(self, provider: str, **kwargs) -> Dict[str, Any]:  # noqa: D401
+		adapter = self._adapter_factory(provider)
+		return adapter.fetch(**kwargs)
+
+__all__ = ["DataManager"]
