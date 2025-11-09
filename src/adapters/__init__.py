@@ -4,7 +4,10 @@ from __future__ import annotations
 from typing import Dict, Type
 
 from .base import APIAdapter
+from .alpha_vantage import AlphaVantageAdapter
 from .binance import BinanceAdapter
+from .cmc import CoinMarketCapAdapter
+from .coingecko import CoinGeckoAdapter
 from .eodhd import EODHDAdapter
 from .polygon import PolygonAdapter
 
@@ -12,6 +15,9 @@ _ADAPTERS: dict[str, type[APIAdapter]] = {
     BinanceAdapter.name: BinanceAdapter,
     PolygonAdapter.name: PolygonAdapter,
     EODHDAdapter.name: EODHDAdapter,
+    CoinMarketCapAdapter.name: CoinMarketCapAdapter,
+    CoinGeckoAdapter.name: CoinGeckoAdapter,
+    AlphaVantageAdapter.name: AlphaVantageAdapter,
 }
 
 

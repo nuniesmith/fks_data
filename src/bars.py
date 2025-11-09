@@ -17,7 +17,23 @@ try:
 except Exception:  # pragma: no cover
     Draft202012Validator = None  # type: ignore
 
-from shared_python.types import MarketBar  # type: ignore
+try:
+    from shared_python.types import MarketBar  # type: ignore
+except (ImportError, ModuleNotFoundError):
+    # Fallback MarketBar type when shared_python is not available
+    from dataclasses import dataclass
+    from datetime import datetime
+    from typing import Optional
+    
+    @dataclass
+    class MarketBar:
+        """Fallback MarketBar when shared_python is not available."""
+        timestamp: datetime
+        open: float
+        high: float
+        low: float
+        close: float
+        volume: Optional[float] = None
 
 try:  # reuse existing upsert logic for now
     from store import upsert_ohlcv  # type: ignore

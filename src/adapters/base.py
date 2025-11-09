@@ -16,14 +16,31 @@ import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterable, Optional, Protocol
 
-try:  # shared package (symlinked) imports
+# Optional shared_python imports - provide fallbacks if not available
+try:
     from shared_python.config import get_settings  # type: ignore
     from shared_python.exceptions import DataFetchError  # type: ignore
     from shared_python.logging import get_logger  # type: ignore
-except Exception:  # pragma: no cover - fallback if path not yet wired
-    from shared_python import get_settings  # type: ignore
-    from shared_python.exceptions import DataFetchError  # type: ignore
-    from shared_python.logging import get_logger  # type: ignore
+except (ImportError, ModuleNotFoundError):
+    # Fallback implementations when shared_python is not available
+    import logging
+    import os
+    from typing import Any, Dict
+    
+    def get_settings() -> Dict[str, Any]:
+        """Fallback settings when shared_python is not available."""
+        return {
+            "api_key": os.getenv("API_KEY", ""),
+            "timeout": float(os.getenv("TIMEOUT", "30.0")),
+        }
+    
+    class DataFetchError(Exception):
+        """Fallback exception when shared_python is not available."""
+        pass
+    
+    def get_logger(name: str) -> logging.Logger:
+        """Fallback logger when shared_python is not available."""
+        return logging.getLogger(name)
 
 
 class HTTPClient(Protocol):

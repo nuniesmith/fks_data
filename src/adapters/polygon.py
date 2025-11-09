@@ -9,7 +9,12 @@ from __future__ import annotations
 import os
 from typing import Any, Dict, List
 
-from shared_python.exceptions import DataFetchError  # type: ignore
+try:
+    from shared_python.exceptions import DataFetchError  # type: ignore
+except (ImportError, ModuleNotFoundError):
+    class DataFetchError(Exception):
+        """Fallback exception when shared_python is not available."""
+        pass
 
 from .base import APIAdapter, get_env_any
 

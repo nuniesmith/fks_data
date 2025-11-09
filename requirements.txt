@@ -12,3 +12,7 @@ binance-python>=0.2.9
 flask>=3.0.0
 cryptography>=41.0.0
 pytz
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+gunicorn>=21.2.0
+gevent>=23.9.0

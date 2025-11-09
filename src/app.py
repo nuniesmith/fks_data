@@ -10,6 +10,7 @@ import sys
 from datetime import UTC, datetime, timezone
 
 from flask import Flask, jsonify, request
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 # Add src to path for local imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
