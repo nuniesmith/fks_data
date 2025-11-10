@@ -9,12 +9,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files
+# Upgrade pip, setuptools, and wheel (better caching with BuildKit)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install --upgrade pip setuptools wheel
+
+# Copy dependency files (for better layer caching)
 COPY requirements.txt ./
 
-# Install Python dependencies
-RUN python -m pip install --upgrade pip && \
-    python -m pip install --user --no-cache-dir -r requirements.txt
+# Install Python dependencies with BuildKit cache mount
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install --user --no-warn-script-location -r requirements.txt
 
 # Runtime stage
 FROM python:3.12-slim
@@ -35,19 +39,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /home/appuser/.local
+# Create non-root user first (before copying files)
+RUN useradd -u 1000 -m -s /bin/bash appuser
 
-# Copy application source
-COPY src/ ./src/
-COPY entrypoint.sh ./
+# Copy Python packages from builder with correct ownership
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
+
+# Copy application source with correct ownership
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser entrypoint.sh ./
 
 # Make entrypoint executable
 RUN chmod +x entrypoint.sh
 
-# Create non-root user
-RUN useradd -u 1000 -m appuser && \
-    chown -R appuser:appuser /app /home/appuser/.local
+# Switch to non-root user
 USER appuser
 
 # Health check
