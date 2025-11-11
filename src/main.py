@@ -471,6 +471,21 @@ def _custom_endpoints():  # noqa: C901
     def _provider_key_handler(provider=None):  # combined
         return _save_provider_key() if request.method == "POST" else _get_provider_key()
 
+    # Import new standardized API routes
+    try:
+        from api.routes.flask_data import get_price, get_ohlcv, list_providers, data_health
+        from api.routes.flask_webhooks import binance_webhook, polygon_webhook, test_webhook
+    except ImportError as e:
+        # Fallback if routes not available
+        print(f"Warning: Could not import new API routes: {e}")
+        get_price = None
+        get_ohlcv = None
+        list_providers = None
+        data_health = None
+        binance_webhook = None
+        polygon_webhook = None
+        test_webhook = None
+
     # Route map -----------------------------------------------------
     routes: dict[str, Any] = {
         "/providers": _providers_info,
@@ -479,13 +494,25 @@ def _custom_endpoints():  # noqa: C901
         "/config": _config_get,
         "/config/set": {"handler": _config_set, "methods": ["POST"]},
         "/providers/<provider>/key": {"handler": _provider_key_handler, "methods": ["GET", "POST"]},
-    # Newly reintroduced provider endpoints
-    "/providers/alpha/daily": _alpha_daily,
-    "/providers/alpha/intraday": _alpha_intraday,
-    "/providers/alpha/news": _alpha_news,
-    "/providers/polygon/aggs": _polygon_aggs,
-    "/crypto/binance/klines": _binance_klines,
+        # Newly reintroduced provider endpoints
+        "/providers/alpha/daily": _alpha_daily,
+        "/providers/alpha/intraday": _alpha_intraday,
+        "/providers/alpha/news": _alpha_news,
+        "/providers/polygon/aggs": _polygon_aggs,
+        "/crypto/binance/klines": _binance_klines,
+        # Phase 2.1: Standardized API routes
+        "/api/v1/data/price": get_price if get_price else None,
+        "/api/v1/data/ohlcv": get_ohlcv if get_ohlcv else None,
+        "/api/v1/data/providers": list_providers if list_providers else None,
+        "/api/v1/data/health": data_health if data_health else None,
+        # Phase 2.1: Webhook endpoints
+        "/webhooks/binance": {"handler": binance_webhook, "methods": ["POST"]} if binance_webhook else None,
+        "/webhooks/polygon": {"handler": polygon_webhook, "methods": ["POST"]} if polygon_webhook else None,
+        "/webhooks/test": test_webhook if test_webhook else None,
     }
+    
+    # Remove None entries (routes that failed to import)
+    routes = {k: v for k, v in routes.items() if v is not None}
 
     return routes
 
