@@ -114,6 +114,7 @@ class MultiProviderManager:
         granularity: str = "1m",
         start_date: Optional[float] = None,
         end_date: Optional[float] = None,
+        limit: Optional[int] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """
@@ -145,7 +146,7 @@ class MultiProviderManager:
                 
                 # Build adapter-specific kwargs
                 adapter_kwargs = self._build_adapter_kwargs(
-                    provider_name, asset, granularity, start_date, end_date, **kwargs
+                    provider_name, asset, granularity, start_date, end_date, limit, **kwargs
                 )
                 
                 data = adapter.fetch(**adapter_kwargs)
@@ -182,6 +183,7 @@ class MultiProviderManager:
         granularity: str,
         start_date: Optional[float],
         end_date: Optional[float],
+        limit: Optional[int],
         **kwargs
     ) -> Dict[str, Any]:
         """Build provider-specific kwargs for adapter fetch."""
@@ -190,6 +192,8 @@ class MultiProviderManager:
         if provider_name == "binance":
             adapter_kwargs["symbol"] = asset.upper() + "USDT" if not asset.endswith("USDT") else asset.upper()
             adapter_kwargs["interval"] = granularity
+            if limit:
+                adapter_kwargs["limit"] = limit
             if start_date:
                 adapter_kwargs["start_time"] = int(start_date * 1000)  # Binance uses milliseconds
             if end_date:

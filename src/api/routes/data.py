@@ -94,6 +94,7 @@ async def get_price(
 async def get_ohlcv(
     symbol: str = Query(..., description="Asset symbol"),
     interval: str = Query("1h", description="Time interval (1m, 5m, 1h, 1d)"),
+    limit: Optional[int] = Query(None, description="Maximum number of candles to fetch"),
     start: Optional[int] = Query(None, description="Start timestamp (Unix)"),
     end: Optional[int] = Query(None, description="End timestamp (Unix)"),
     provider: Optional[str] = Query(None, description="Specific provider"),
@@ -107,7 +108,7 @@ async def get_ohlcv(
     try:
         # Check cache
         cache = get_cache_backend()
-        cache_key = f"ohlcv:{symbol}:{interval}:{start}:{end}"
+        cache_key = f"ohlcv:{symbol}:{interval}:{limit}:{start}:{end}"
         
         if use_cache and cache:
             cached_data = await cache.get(cache_key)
@@ -121,7 +122,8 @@ async def get_ohlcv(
             granularity=interval,
             start_date=start,
             end_date=end,
-            providers=[provider] if provider else None
+            providers=[provider] if provider else None,
+            limit=limit
         )
         
         if not result or not result.get("data"):
