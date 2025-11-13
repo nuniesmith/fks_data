@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: nuniesmith/fks_data:latest
+    image: nuniesmith/fks:data-latest
     container_name: fks_data
     ports:
       - "8003:8003"
