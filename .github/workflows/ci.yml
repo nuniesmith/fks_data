@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+    tags:
+      - "v*"
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: nuniesmith/fks_actions/.github/workflows/ci-python-service.yml@main
+    with:
+      service_name: data
+      service_port: '8001'
+      python_version: '3.12'
+      has_dev_requirements: true
+      run_mypy: true
+    secrets:
+      docker_token: ${{ secrets.DOCKER_TOKEN }}
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
