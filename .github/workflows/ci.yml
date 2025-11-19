@@ -23,4 +23,3 @@ jobs:
       run_mypy: true
     secrets:
       docker_token: ${{ secrets.DOCKER_TOKEN }}
-      codecov_token: ${{ secrets.CODECOV_TOKEN }}
