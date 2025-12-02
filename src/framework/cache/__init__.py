@@ -8,6 +8,8 @@ This package provides comprehensive caching functionality including:
 - Cache invalidation and management utilities
 """
 
+from typing import Optional
+
 # Import backend implementations
 from .backends import (
     CacheBackend,
@@ -99,6 +101,7 @@ __all__ = [
     "memory_cache",
     "default_memory_cache",
     "default_cache_manager",
+    "get_cache_backend",
 ]
 
 # Package metadata
@@ -191,6 +194,25 @@ def auto_configure_cache():
 # Initialize auto-configured cache
 auto_backend_type, auto_backend = auto_configure_cache()
 cache_manager.register_backend("auto", auto_backend)
+
+
+def get_cache_backend() -> Optional[CacheBackend]:
+    """
+    Get the default cache backend for use in Flask routes and sync code.
+    
+    Returns:
+        Cache backend instance, or None if not available
+    """
+    try:
+        # Try to get auto-configured backend
+        backend = cache_manager.get_backend("auto")
+        if backend:
+            return backend
+        
+        # Fallback to default memory backend
+        return cache_manager.get_backend("default")
+    except Exception:
+        return None
 
 # Logging configuration check
 try:

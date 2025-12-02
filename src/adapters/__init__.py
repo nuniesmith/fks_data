@@ -9,11 +9,13 @@ from .binance import BinanceAdapter
 from .cmc import CoinMarketCapAdapter
 from .coingecko import CoinGeckoAdapter
 from .eodhd import EODHDAdapter
+from .massive_futures import MassiveFuturesAdapter
 from .polygon import PolygonAdapter
 
 _ADAPTERS: dict[str, type[APIAdapter]] = {
     BinanceAdapter.name: BinanceAdapter,
     PolygonAdapter.name: PolygonAdapter,
+    MassiveFuturesAdapter.name: MassiveFuturesAdapter,
     EODHDAdapter.name: EODHDAdapter,
     CoinMarketCapAdapter.name: CoinMarketCapAdapter,
     CoinGeckoAdapter.name: CoinGeckoAdapter,

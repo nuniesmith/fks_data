@@ -3,17 +3,42 @@ services:
   fks_data:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
     image: nuniesmith/fks:data-latest
-    container_name: fks_data
+    # This is the primary service that builds the image
+    container_name: fks-data
     ports:
       - "8003:8003"
     environment:
       - SERVICE_NAME=fks_data
       - SERVICE_PORT=8003
       - PYTHONPATH=/app/src:/app
+      # Database Configuration (can be overridden by .env)
+      - DATABASE_URL=${DATABASE_URL:-postgresql://fks_user:fks_password@fks_data_db:5432/trading_db}
+      - DB_HOST=${DB_HOST:-fks_data_db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-trading_db}
+      - DB_USER=${DB_USER:-fks_user}
+      - DB_PASSWORD=${DB_PASSWORD:-fks_password}
+      - POSTGRES_HOST=${POSTGRES_HOST:-fks_data_db}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-trading_db}
+      - POSTGRES_USER=${POSTGRES_USER:-fks_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-fks_password}
+      # Redis Configuration (can be overridden by .env)
+      - REDIS_URL=${REDIS_URL:-redis://:@fks_data_redis:6379/0}
+      # API Keys (set these in your .env file)
+      - POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - FKS_POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - BINANCE_API_KEY=${BINANCE_API_KEY:-}
+      - ALPHA_API_KEY=${ALPHA_API_KEY:-}
     networks:
       - fks-network
+    depends_on:
+      fks_data_db:
+        condition: service_healthy
+      fks_data_redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
@@ -21,6 +46,116 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  fks_data_db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: fks-data-db
+    environment:
+      - POSTGRES_DB=trading_db
+      - POSTGRES_USER=fks_user
+      - POSTGRES_PASSWORD=fks_password
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8
+    ports:
+      - "5433:5432"  # Use 5433 to avoid conflict with other postgres instances
+    volumes:
+      - fks_data_db_data:/var/lib/postgresql/data
+    networks:
+      - fks-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fks_user -d trading_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  fks_data_redis:
+    image: redis:7-alpine
+    container_name: fks-data-redis
+    ports:
+      - "6380:6379"  # Use 6380 to avoid conflict with other redis instances
+    volumes:
+      - fks_data_redis_data:/data
+    networks:
+      - fks-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  fks_data_celery_worker:
+    image: nuniesmith/fks:data-latest
+    # Reuse the image built by fks_data service
+    container_name: fks-data-celery-worker
+    command: celery -A src.celery_app worker --loglevel=info --concurrency=2 --hostname=worker@%h
+    environment:
+      - SERVICE_NAME=fks_data_celery_worker
+      - PYTHONPATH=/app/src:/app
+      - DATABASE_URL=${DATABASE_URL:-postgresql://fks_user:fks_password@fks_data_db:5432/trading_db}
+      - DB_HOST=${DB_HOST:-fks_data_db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-trading_db}
+      - DB_USER=${DB_USER:-fks_user}
+      - DB_PASSWORD=${DB_PASSWORD:-fks_password}
+      - REDIS_URL=${REDIS_URL:-redis://:@fks_data_redis:6379/0}
+      - POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - FKS_POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - BINANCE_API_KEY=${BINANCE_API_KEY:-}
+    networks:
+      - fks-network
+    depends_on:
+      fks_data_db:
+        condition: service_healthy
+      fks_data_redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import os; exit(0 if any(\"celery\" in open(f\"/proc/{p}/cmdline\").read() for p in os.listdir(\"/proc\") if p.isdigit()) else 1)'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  fks_data_celery_beat:
+    image: nuniesmith/fks:data-latest
+    # Reuse the image built by fks_data service
+    container_name: fks-data-celery-beat
+    command: celery -A src.celery_app beat --loglevel=info --pidfile=/tmp/celerybeat.pid --schedule=/tmp/celerybeat-schedule
+    volumes:
+      - celerybeat_data:/tmp
+    environment:
+      - SERVICE_NAME=fks_data_celery_beat
+      - PYTHONPATH=/app/src:/app
+      - DATABASE_URL=${DATABASE_URL:-postgresql://fks_user:fks_password@fks_data_db:5432/trading_db}
+      - DB_HOST=${DB_HOST:-fks_data_db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-trading_db}
+      - DB_USER=${DB_USER:-fks_user}
+      - DB_PASSWORD=${DB_PASSWORD:-fks_password}
+      - REDIS_URL=${REDIS_URL:-redis://:@fks_data_redis:6379/0}
+    networks:
+      - fks-network
+    depends_on:
+      fks_data_db:
+        condition: service_healthy
+      fks_data_redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import os; cmdline_file=\"/proc/1/cmdline\"; content=open(cmdline_file,\"rb\").read().decode(\"utf-8\",\"ignore\") if os.path.exists(cmdline_file) else \"\"; exit(0) if \"celery\" in content and \"beat\" in content else exit(1)'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  fks_data_db_data:
+  fks_data_redis_data:
+  celerybeat_data:
 
 networks:
   fks-network:

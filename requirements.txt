@@ -16,3 +16,12 @@ fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 gunicorn>=21.2.0
 gevent>=23.9.0
+celery>=5.3.0
+redis>=5.0.0
+python-dateutil>=2.8.0
+websockets>=12.0
+loguru>=0.7.0
+
+# Prometheus metrics
+prometheus-flask-exporter>=0.23.0
+prometheus-client>=0.19.0

@@ -10,7 +10,7 @@ Ingests, validates, stores, and serves market data & derived datasets.
 
 FKS Data is the central data service for the FKS Trading Platform. It provides:
 
-- **Data Ingestion**: Multi-source market data collection (Binance, Polygon, Yahoo)
+- **Data Ingestion**: Multi-source market data collection (Binance, Polygon.io, Massive.com Futures, Yahoo)
 - **Data Validation**: Quality checks and normalization
 - **Data Storage**: TimescaleDB for time-series data
 - **Data Serving**: REST API for querying market data
@@ -43,7 +43,7 @@ FKS Data is the central data service for the FKS Trading Platform. It provides:
 
 **Key Components**:
 - **Adapter Layer**: Unified API adapter with rate limiting, retries, exponential backoff
-- **Providers**: Exchange-specific data providers (Binance, Polygon, Yahoo)
+- **Providers**: Exchange-specific data providers (Binance, Polygon.io, Massive.com Futures, Yahoo)
 - **Pipelines**: Data transformation and enrichment
 - **Validation**: Data quality checks
 - **Store**: Persistence abstraction layer
@@ -97,10 +97,96 @@ cd /home/jordan/Documents/code/fks
 
 ### Market Data
 
-- `GET /data/ohlcv/{symbol}` - Get OHLCV data
-- `GET /data/fundamentals/{symbol}` - Get fundamental data
-- `GET /data/features/{symbol}` - Get derived features
-- `POST /data/fetch` - Fetch data from provider
+- `GET /api/v1/data/price?symbol={symbol}` - Get current price
+- `GET /api/v1/data/ohlcv?symbol={symbol}&interval={interval}` - Get OHLCV data
+- `GET /api/v1/data/providers` - List available data providers
+
+### Massive.com Futures API ✅
+
+**Status**: Fully integrated and available (service migrated to FastAPI)
+
+The Massive.com Futures API (formerly Polygon.io Futures) provides comprehensive futures market data including contracts, products, schedules, aggregates, trades, quotes, and real-time WebSocket streams.
+
+**Available Endpoints**:
+
+- `GET /api/v1/futures/contracts` - List futures contracts (with filtering)
+  - Query params: `product_code`, `first_trade_date`, `last_trade_date`, `as_of`, `active`, `type`, `limit`, `sort`
+- `GET /api/v1/futures/contracts/{ticker}` - Get contract details
+- `GET /api/v1/futures/products` - List all futures products
+- `GET /api/v1/futures/products/{product_code}` - Get product details
+- `GET /api/v1/futures/products/{product_code}/schedules` - Get product-specific trading schedules
+- `GET /api/v1/futures/schedules` - Get all trading schedules
+- `GET /api/v1/futures/aggs/{ticker}` - Get aggregate bars (OHLC)
+  - Query params: `resolution` (1min, 5min, 1hour, 1day), `window_start`, `limit`, `sort`
+- `GET /api/v1/futures/trades/{ticker}` - Get trades
+  - Query params: `timestamp`, `session_end_date`, `limit`, `sort`
+- `GET /api/v1/futures/quotes/{ticker}` - Get quotes
+  - Query params: `timestamp`, `session_end_date`, `limit`, `sort`
+- `GET /api/v1/futures/market-status` - Get current market status
+- `GET /api/v1/futures/exchanges` - List supported exchanges
+- `WS /api/v1/futures/ws` - WebSocket endpoint for real-time data streams
+
+**API Key Configuration**:
+
+The Massive.com Futures API requires an API key. Configure it via:
+
+1. **Environment Variable** (recommended):
+   ```bash
+   export MASSIVE_API_KEY="your_futures_beta_key"
+   # Or use legacy name:
+   export POLYGON_API_KEY="your_futures_beta_key"
+   export FKS_MASSIVE_API_KEY="your_futures_beta_key"
+   ```
+
+2. **Web Interface**:
+   - Navigate to Settings > API Keys in fks_web
+   - Add new API key with provider "Massive.com (Futures)"
+   - Enter your Futures Beta API key
+
+**Example Usage**:
+```bash
+# Get contracts for ES (E-mini S&P 500)
+curl "http://localhost:8003/api/v1/futures/contracts?product_code=ES&limit=10"
+
+# Get aggregate bars (1-minute resolution)
+curl "http://localhost:8003/api/v1/futures/aggs/ESU0?resolution=1min&limit=100"
+
+# Get all products
+curl "http://localhost:8003/api/v1/futures/products"
+
+# Get market status
+curl "http://localhost:8003/api/v1/futures/market-status"
+```
+
+**WebSocket Usage**:
+```python
+import asyncio
+import websockets
+import json
+
+async def subscribe_futures():
+    uri = "ws://localhost:8003/api/v1/futures/ws"
+    async with websockets.connect(uri) as websocket:
+        # Subscribe to trades for ESU0
+        await websocket.send(json.dumps({
+            "action": "subscribe",
+            "params": {
+                "ticker": "ESU0",
+                "type": "trades"
+            }
+        }))
+        
+        # Receive real-time data
+        async for message in websocket:
+            data = json.loads(message)
+            print(f"Received: {data}")
+```
+
+**For detailed documentation**, see:
+- `docs/MASSIVE_FUTURES.md` - Complete API reference and integration guide
+- `docs/MASSIVE_FUTURES_API_TEST_RESULTS.md` - Test results and endpoint verification
+
+**Note**: Massive.com rebranded from Polygon.io Futures on October 30, 2025. The API endpoints and functionality remain the same.
 
 ### Adapter API
 
@@ -143,9 +229,11 @@ FKS_API_BACKOFF_BASE=0.3                 # Exponential backoff base
 FKS_API_BACKOFF_JITTER=0.25              # Jitter upper bound
 
 # Provider API Keys
-POLYGON_API_KEY=your-polygon-api-key
-FKS_POLYGON_API_KEY=your-polygon-api-key  # Alternative name
-BINANCE_API_KEY=your-binance-api-key      # Optional (public data doesn't require key)
+POLYGON_API_KEY=your-polygon-api-key              # Legacy name (still supported)
+FKS_POLYGON_API_KEY=your-polygon-api-key          # Alternative name
+MASSIVE_API_KEY=your-massive-futures-api-key      # Massive.com Futures API key (recommended)
+FKS_MASSIVE_API_KEY=your-massive-futures-api-key  # Alternative name for Massive.com
+BINANCE_API_KEY=your-binance-api-key              # Optional (public data doesn't require key)
 
 # Logging
 FKS_JSON_LOGS=1                          # Enable JSON structured logs

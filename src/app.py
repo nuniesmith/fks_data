@@ -30,6 +30,33 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Set up Prometheus metrics (standardized metrics for all FKS services)
+try:
+    import sys
+    # Try to import from fks_api framework (if available)
+    api_framework_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'api', 'src')
+    if os.path.exists(api_framework_path) and api_framework_path not in sys.path:
+        sys.path.insert(0, api_framework_path)
+    
+    try:
+        from framework.middleware.flask_prometheus_metrics import setup_flask_prometheus_metrics
+        setup_flask_prometheus_metrics(
+            app,
+            service_name="fks_data",
+            version="1.0.0",
+            commit=os.getenv("GIT_COMMIT", os.getenv("COMMIT_SHA")),
+            build_date=os.getenv("BUILD_DATE", os.getenv("BUILD_TIMESTAMP")),
+            enable_http_metrics=True,
+            enable_process_metrics=True,
+        )
+    except ImportError:
+        # Fallback: use prometheus_client directly if framework not available
+        from prometheus_client import make_wsgi_app
+        metrics_app = make_wsgi_app()
+        app.wsgi_app = metrics_app
+except Exception as e:
+    logger.warning(f"Could not set up Prometheus metrics: {e}")
+
 # Service information
 SERVICE_INFO = {
     "name": "fks_data",
@@ -220,6 +247,79 @@ try:
             
             if not result or not result.get("data"):
                 return jsonify({"error": f"No OHLCV data found for {symbol}"}), 404
+            
+            # Store data in database if available
+            try:
+                import psycopg2
+                from datetime import datetime
+                import os
+                
+                logger.info(f"Attempting to store {len(result.get('data', []))} rows for {symbol} {interval}")
+                
+                # Get database connection parameters
+                db_host = os.getenv("DB_HOST", os.getenv("POSTGRES_HOST", "fks_data_db"))
+                db_port = int(os.getenv("DB_PORT", os.getenv("POSTGRES_PORT", "5432")))
+                db_name = os.getenv("DB_NAME", os.getenv("POSTGRES_DB", "trading_db"))
+                db_user = os.getenv("DB_USER", os.getenv("POSTGRES_USER", "fks_user"))
+                db_password = os.getenv("DB_PASSWORD", os.getenv("POSTGRES_PASSWORD", "fks_password"))
+                
+                # Convert data for storage
+                data_list = result["data"]
+                if data_list:
+                    provider_name = result.get("provider", "binance")
+                    
+                    # Prepare data for insertion
+                    rows = []
+                    for item in data_list:
+                        ts_value = item.get("ts", 0)
+                        if isinstance(ts_value, (int, float)):
+                            ts_value = datetime.fromtimestamp(ts_value)
+                        elif isinstance(ts_value, str):
+                            from dateutil import parser
+                            ts_value = parser.parse(ts_value)
+                        
+                        rows.append((
+                            provider_name,
+                            symbol,
+                            interval,
+                            ts_value,
+                            item.get("open"),
+                            item.get("high"),
+                            item.get("low"),
+                            item.get("close"),
+                            item.get("volume")
+                        ))
+                    
+                    if rows:
+                        logger.info(f"Connecting to database at {db_host}:{db_port}")
+                        # Insert into database
+                        conn = psycopg2.connect(
+                            host=db_host,
+                            port=db_port,
+                            database=db_name,
+                            user=db_user,
+                            password=db_password
+                        )
+                        try:
+                            cur = conn.cursor()
+                            sql = (
+                                "INSERT INTO ohlcv (source, symbol, interval, ts, open, high, low, close, volume) "
+                                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) "
+                                "ON CONFLICT (source, symbol, interval, ts) DO UPDATE SET "
+                                "open=EXCLUDED.open, high=EXCLUDED.high, low=EXCLUDED.low, close=EXCLUDED.close, volume=EXCLUDED.volume"
+                            )
+                            cur.executemany(sql, rows)
+                            conn.commit()
+                            logger.info(f"✅ Stored {len(rows)} rows for {symbol} {interval} in database")
+                        finally:
+                            cur.close()
+                            conn.close()
+            except ImportError as e:
+                # Missing dependency - log but don't fail
+                logger.warning(f"Database storage not available (missing dependency): {e}")
+            except Exception as e:
+                # Don't fail the request if storage fails
+                logger.error(f"❌ Failed to store data in database: {e}", exc_info=True)
             
             ohlcv_data = {
                 "symbol": symbol,

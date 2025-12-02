@@ -50,9 +50,14 @@ async def get_price(
         cache_key = f"price:{symbol}:{provider or 'any'}"
         
         if use_cache and cache:
-            cached_data = await cache.get(cache_key)
-            if cached_data:
-                return PriceResponse(**cached_data, cached=True)
+            try:
+                # Cache is async
+                if hasattr(cache, 'get'):
+                    cached_data = await cache.get(cache_key)
+                    if cached_data:
+                        return PriceResponse(**cached_data, cached=True)
+            except Exception as e:
+                logger.debug(f"Cache get error: {e}")
         
         # Use MultiProviderManager for failover
         manager = MultiProviderManager()
@@ -80,7 +85,11 @@ async def get_price(
         
         # Cache for 60 seconds
         if cache and use_cache:
-            await cache.set(cache_key, price_data.dict(), ttl=60)
+            try:
+                if hasattr(cache, 'set'):
+                    await cache.set(cache_key, price_data.dict(), ttl=60)
+            except Exception as e:
+                logger.warning(f"Cache set error: {e}")
         
         return price_data
         
@@ -111,9 +120,14 @@ async def get_ohlcv(
         cache_key = f"ohlcv:{symbol}:{interval}:{limit}:{start}:{end}"
         
         if use_cache and cache:
-            cached_data = await cache.get(cache_key)
-            if cached_data:
-                return OHLCVResponse(**cached_data, cached=True)
+            try:
+                # Cache is async
+                if hasattr(cache, 'get'):
+                    cached_data = await cache.get(cache_key)
+                    if cached_data:
+                        return OHLCVResponse(**cached_data, cached=True)
+            except Exception as e:
+                logger.debug(f"Cache get error: {e}")
         
         # Fetch data
         manager = MultiProviderManager()
@@ -139,7 +153,11 @@ async def get_ohlcv(
         
         # Cache for 5 minutes
         if cache and use_cache:
-            await cache.set(cache_key, ohlcv_data.dict(), ttl=300)
+            try:
+                if hasattr(cache, 'set'):
+                    await cache.set(cache_key, ohlcv_data.dict(), ttl=300)
+            except Exception as e:
+                logger.warning(f"Cache set error: {e}")
         
         return ohlcv_data
         

@@ -1,8 +1,12 @@
-"""Polygon adapter using unified APIAdapter base.
+"""Polygon.io adapter using unified APIAdapter base.
+
+Note: This adapter is for Polygon.io stocks and crypto data.
+For U.S. futures data, use MassiveFuturesAdapter instead.
 
 Supports aggregate bars endpoint.
 Env vars:
   POLYGON_API_KEY or FKS_POLYGON_API_KEY for auth header.
+  API keys can also be managed via the web interface (encrypted storage).
 """
 from __future__ import annotations
 
