@@ -110,7 +110,7 @@ class BarRepository:
                     "provider": b.provider or provider,
                     "symbol": symbol,
                     "interval": interval,
-                    "datetime": datetime.fromtimestamp(b.ts, tz=UTC),
+                    "datetime": datetime.fromtimestamp(b.ts, TZ=American/Toronto),
                     "open": b.open,
                     "high": b.high,
                     "low": b.low,

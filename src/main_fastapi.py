@@ -87,6 +87,13 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Futures routes not available: {e}")
 
+try:
+    from src.api.routes.news import router as news_router
+    app.include_router(news_router, tags=["news"])
+    logger.info("✅ News routes loaded (migrated from data_ingestion)")
+except ImportError as e:
+    logger.warning(f"⚠️ News routes not available: {e}")
+
 # Root endpoint
 @app.get("/", response_class=JSONResponse)
 async def root():
