@@ -32,7 +32,6 @@ services:
       - FKS_POLYGON_API_KEY=${POLYGON_API_KEY:-}
       - BINANCE_API_KEY=${BINANCE_API_KEY:-}
       - ALPHA_API_KEY=${ALPHA_API_KEY:-}
-      - NEWSAPI_KEY=${NEWSAPI_KEY:-}
     networks:
       - fks-network
     depends_on:

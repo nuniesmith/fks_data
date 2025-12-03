@@ -6,14 +6,11 @@ Ingests, validates, stores, and serves market data & derived datasets.
 **Framework**: Python 3.12 + FastAPI  
 **Role**: Market data ingestion, validation, storage, and serving
 
-> 📢 **Update**: This service now includes all functionality previously in `fks_data_ingestion`, including NewsAPI integration. The `data_ingestion` service is deprecated.
-
 ## 🎯 Purpose
 
 FKS Data is the central data service for the FKS Trading Platform. It provides:
 
-- **Data Ingestion**: Multi-source market data collection (Binance, Polygon.io, Massive.com Futures, Yahoo, NewsAPI)
-- **News Collection**: Financial news from NewsAPI for sentiment analysis
+- **Data Ingestion**: Multi-source market data collection (Binance, Polygon.io, Massive.com Futures, Yahoo)
 - **Data Validation**: Quality checks and normalization
 - **Data Storage**: TimescaleDB for time-series data
 - **Data Serving**: REST API for querying market data
@@ -27,9 +24,9 @@ FKS Data is the central data service for the FKS Trading Platform. It provides:
 ┌─────────────┐     ┌─────────────┐
 │  Exchanges  │────▶│  fks_data    │
 │ (Binance,   │     │  (Adapter    │
-│  Polygon,   │     │   Layer)     │
-│  NewsAPI)   │     └──────┬───────┘
-└─────────────┘            │
+│  Polygon)   │     │   Layer)     │
+└─────────────┘     └──────┬───────┘
+                           │
                            ▼
                     ┌─────────────┐
                     │ TimescaleDB │
@@ -37,18 +34,16 @@ FKS Data is the central data service for the FKS Trading Platform. It provides:
                     └──────┬───────┘
                            │
                            ▼
-              ┌────────────┴────────────┐
-              │                         │
-       ┌──────┴──────┐         ┌───────┴───────┐
-       │ fks_feature │         │    fks_app    │
-       │ _engineering│         │    fks_ai     │
-       │  (Features) │         │  (Consumers)  │
-       └─────────────┘         └───────────────┘
+                    ┌─────────────┐
+                    │  fks_app    │
+                    │  fks_ai     │
+                    │  (Consumers)│
+                    └─────────────┘
 ```
 
 **Key Components**:
 - **Adapter Layer**: Unified API adapter with rate limiting, retries, exponential backoff
-- **Providers**: Exchange-specific data providers (Binance, Polygon.io, Massive.com Futures, Yahoo, NewsAPI)
+- **Providers**: Exchange-specific data providers (Binance, Polygon.io, Massive.com Futures, Yahoo)
 - **Pipelines**: Data transformation and enrichment
 - **Validation**: Data quality checks
 - **Store**: Persistence abstraction layer
