@@ -13,8 +13,9 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+from prometheus_client import CollectorRegistry, Gauge, generate_latest
 
 # Configure logging
 logging.basicConfig(
@@ -119,6 +120,22 @@ async def status():
             "docs": "/docs"
         }
     }
+
+# -----------------------------------------------------------------------------
+# Prometheus metrics - minimal exporter
+# -----------------------------------------------------------------------------
+registry = CollectorRegistry()
+build_info = Gauge(
+    "fks_build_info",
+    "Build information",
+    ["service", "version"],
+    registry=registry,
+)
+build_info.labels(service="fks_data", version=SERVICE_INFO["version"]).set(1)
+
+@app.get("/metrics", response_class=PlainTextResponse)
+async def metrics():
+    return PlainTextResponse(generate_latest(registry).decode("utf-8"))
 
 if __name__ == "__main__":
     import uvicorn
