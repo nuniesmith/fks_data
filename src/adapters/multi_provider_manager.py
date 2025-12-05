@@ -92,10 +92,12 @@ class MultiProviderManager:
         self.cooldown_seconds = cooldown_seconds
         
         # Default provider priority by asset type
+        # Finnhub and Tiingo added as high-priority providers
+        # Failover chain: finnhub → tiingo → polygon → eodhd → alpha_vantage
         self.default_providers = {
-            "crypto": ["binance", "cmc", "polygon"],
-            "stock": ["polygon", "eodhd"],
-            "etf": ["polygon", "eodhd"],
+            "crypto": ["binance", "finnhub", "cmc", "polygon"],
+            "stock": ["finnhub", "tiingo", "polygon", "eodhd", "alpha_vantage"],
+            "etf": ["finnhub", "tiingo", "polygon", "eodhd"],
         }
         
         # Use provided providers or default
@@ -218,6 +220,20 @@ class MultiProviderManager:
         elif provider_name == "eodhd":
             adapter_kwargs["symbol"] = asset.upper()
             adapter_kwargs["interval"] = granularity
+        elif provider_name == "finnhub":
+            adapter_kwargs["symbol"] = asset.upper()
+            adapter_kwargs["resolution"] = granularity
+            if start_date:
+                adapter_kwargs["from"] = int(start_date)
+            if end_date:
+                adapter_kwargs["to"] = int(end_date)
+        elif provider_name == "tiingo":
+            adapter_kwargs["symbol"] = asset.upper()
+            adapter_kwargs["resolution"] = granularity
+            if start_date:
+                adapter_kwargs["startDate"] = start_date
+            if end_date:
+                adapter_kwargs["endDate"] = end_date
         
         return adapter_kwargs
     

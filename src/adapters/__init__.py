@@ -9,8 +9,11 @@ from .binance import BinanceAdapter
 from .cmc import CoinMarketCapAdapter
 from .coingecko import CoinGeckoAdapter
 from .eodhd import EODHDAdapter
+from .finnhub import FinnhubAdapter
 from .massive_futures import MassiveFuturesAdapter
+from .pandas_datareader import PandasDataReaderAdapter
 from .polygon import PolygonAdapter
+from .tiingo import TiingoAdapter
 
 _ADAPTERS: dict[str, type[APIAdapter]] = {
     BinanceAdapter.name: BinanceAdapter,
@@ -20,6 +23,9 @@ _ADAPTERS: dict[str, type[APIAdapter]] = {
     CoinMarketCapAdapter.name: CoinMarketCapAdapter,
     CoinGeckoAdapter.name: CoinGeckoAdapter,
     AlphaVantageAdapter.name: AlphaVantageAdapter,
+    FinnhubAdapter.name: FinnhubAdapter,
+    TiingoAdapter.name: TiingoAdapter,
+    PandasDataReaderAdapter.name: PandasDataReaderAdapter,
 }
 
 

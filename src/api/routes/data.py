@@ -3,6 +3,7 @@ Standardized REST API routes for market data.
 Phase 2.1: Data Flow Stabilization
 """
 
+import logging
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Query, HTTPException, Depends
@@ -11,6 +12,8 @@ from pydantic import BaseModel
 from ...adapters import get_adapter
 from ...adapters.multi_provider_manager import MultiProviderManager
 from ...framework.cache import get_cache_backend
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/data", tags=["data"])
 

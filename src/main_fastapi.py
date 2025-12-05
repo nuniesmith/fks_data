@@ -87,6 +87,13 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Futures routes not available: {e}")
 
+try:
+    from src.api.routes.websocket import router as websocket_router
+    app.include_router(websocket_router, tags=["websocket"])
+    logger.info("✅ WebSocket routes loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ WebSocket routes not available: {e}")
+
 # Root endpoint
 @app.get("/", response_class=JSONResponse)
 async def root():
